@@ -2,6 +2,7 @@ import copy
 import functools
 import json
 import logging
+import re
 
 from cloud_info_provider import exceptions
 from cloud_info_provider import providers
@@ -249,6 +250,10 @@ class OpenStackProvider(providers.BaseProvider):
         tpl_sch = defaults.get('template_schema', 'resource')
         URI = 'http://schemas.openstack.org/template/'
         add_all = self.select_flavors == 'all'
+        # properties
+        property_keys = [_opt for _opt in vars(self.opts)
+                         if _opt.startswith('property_')
+                         and not _opt.endswith('_value')]
         for flavor in self.nova.flavors.list(detailed=True):
             add_pub = self.select_flavors == 'public' and flavor.is_public
             add_priv = (self.select_flavors == 'private' and not
@@ -264,6 +269,22 @@ class OpenStackProvider(providers.BaseProvider):
                         'template_ephemeral': flavor.ephemeral,
                         'template_disk': flavor.disk,
                         'template_cpu': flavor.vcpus})
+            # properties
+            d_properties = {}
+            for k in property_keys:
+                opts_k = vars(self.opts)[k]
+                v = flavor.get_keys().get(opts_k)
+                property_id = re.search('property_(\w+)', k).group(1)
+                # if '_value' suffix provided, validate it
+                try:
+                    opts_v = vars(self.opts)['_'.join([k, 'value'])]
+                except KeyError:
+                    opts_v = False
+                if opts_v:
+                    d_properties['template_%s' % property_id] = v == opts_v
+                else:
+                    d_properties['template_%s' % property_id] = v
+            aux.update(d_properties)
             flavors[flavor.id] = aux
         return flavors
 
@@ -497,3 +518,37 @@ class OpenStackProvider(providers.BaseProvider):
             help=('If set, include information about all images (including '
                   'snapshots), otherwise only publish images with cloudkeeper '
                   'metadata, ignoring the others.'))
+        # PROPERTIES
+        # If 'property-<property>-value' is provided, the capability will only
+        # be published when the given value matches the one in the flavor
+        parser.add_argument(
+            '--property-infiniband',
+            metavar='PROPERTY_KEY',
+            default='infiniband',
+            help=('Flavor\'s property key for Infiniband support.'))
+        parser.add_argument(
+            '--property-infiniband-value',
+            metavar='PROPERTY_VALUE',
+            default='true',
+            help=('When Infiniband is supported, this option specifies the '
+                  'value to match.'))
+        parser.add_argument(
+            '--property-gpu-number',
+            metavar='PROPERTY_KEY',
+            default='gpu_number',
+            help=('Flavor\'s property key pointing to number of GPUs.'))
+        parser.add_argument(
+            '--property-gpu-vendor',
+            metavar='PROPERTY_KEY',
+            default='gpu_vendor',
+            help=('Flavor\'s property key pointing to the GPU vendor.'))
+        parser.add_argument(
+            '--property-gpu-model',
+            metavar='PROPERTY_KEY',
+            default='gpu_model',
+            help=('Flavor\'s property key pointing to the GPU model.'))
+        parser.add_argument(
+            '--property-gpu-driver',
+            metavar='PROPERTY_KEY',
+            default='gpu_driver',
+            help=('Flavor\'s property key pointing to the GPU driver version'))
