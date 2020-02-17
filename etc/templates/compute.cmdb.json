@@ -9,6 +9,14 @@
 "${k}": ${v}${',' if comma else ''}
 % endif
 </%def>
+<%!
+def is_iam_enabled(shares):
+    enabled = False
+    for _vo, _share in shares.items():
+        if _share.get('iam_organisation', None):
+            enabled = True
+    return enabled
+%>
 [
 <%
     middleware = attributes['middleware']
@@ -18,6 +26,7 @@
     provider_id = static_compute_info['site_name']
     service_id = static_compute_info['compute_service_name']
     is_public = static_compute_info['site_is_public']
+    iam_enabled = is_iam_enabled(shares)
 
     from six.moves import urllib
     host_name = urllib.parse.urlparse(static_compute_info['compute_service_name']).hostname
@@ -42,6 +51,7 @@
             "provider_id": "${provider_id}",
             "id": "${service_id}",
             "is_public_service": ${'true' if is_public else 'false'},
+            "iam_enabled": ${'true' if iam_enabled else 'false'},
             ${render_string('hostname', host_name)}
             ${render_string('service_type', goc_service_type)}
             ${render_string('sitename', static_compute_info['site_name'])}
