@@ -27,6 +27,8 @@ class CloudInfoException(Exception):
 class OpenStackProviderException(CloudInfoException):
     pass
 
+class AwsProviderException(CloudInfoException):
+    pass
 
 class StaticProviderException(CloudInfoException):
     pass

@@ -11,3 +11,5 @@ stevedore
 #python-novaclient
 #python-glanceclient
 #keystoneauth1
+#For AWS
+boto3
