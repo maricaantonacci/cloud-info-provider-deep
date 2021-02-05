@@ -21,6 +21,7 @@
     region = static_compute_info['compute_region']
     iam_enabled = static_compute_info['compute_iam_enabled']
     idp_protocol = static_compute_info['compute_idp_protocol']
+    federation = static_compute_info['compute_federation']
 
     from six.moves import urllib
     urlparse_obj = urllib.parse.urlparse(service_id)
@@ -50,6 +51,19 @@
             "region": "${region}",
             "iam_enabled": ${'true' if iam_enabled else 'false'},
             "idp_protocol": "${idp_protocol}",
+            "supported_idps": [
+            % for _name, _data in federation.items():
+            <%
+                _issuer = _data['issuer']
+                _protocol = _data['protocol']
+            %>
+            {
+                ${render_string("name", _name, required_type=True)}
+                ${render_string("issuer", _issuer, required_type=True)}
+                ${render_string("protocol", _protocol, required_type=True, comma=False)}
+            }${'' if loop.last else ','}
+            % endfor
+            ],
             "is_public_service": ${'true' if is_public else 'false'},
             ${render_string('hostname', host_name)}
             ${render_string('service_type', goc_service_type)}

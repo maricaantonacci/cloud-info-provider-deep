@@ -184,7 +184,7 @@ class StaticProvider(providers.BaseProvider):
                                      'vm_backup_restore',
                                      'service_name', 'region',
                                      'public_ip_assignable',
-                                     'iam_enabled', 'idp_protocol')
+                                     'iam_enabled', 'idp_protocol', 'federation')
         endpoint_fields = endp_f or ('production_level', 'api_type',
                                      'api_version',
                                      'api_endpoint_technology',
@@ -278,7 +278,8 @@ class StaticProvider(providers.BaseProvider):
             'vm_backup_restore': False,
             'total_accelerators': 0,
             'region': '',
-            'idp_protocol': 'oidc'
+            'idp_protocol': 'oidc',
+            'federation': {}
         }
         return self._populate_default_values(
             self._get_defaults_from_yaml('compute',
