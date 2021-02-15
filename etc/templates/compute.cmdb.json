@@ -181,5 +181,6 @@
         }
     }${'' if loop.last else ','}
 % endfor
+${'' if loop.last else ','}
 % endfor
 ]
