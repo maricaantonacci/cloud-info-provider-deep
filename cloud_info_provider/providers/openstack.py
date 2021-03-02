@@ -344,7 +344,7 @@ class OpenStackProvider(providers.BaseProvider):
         URI = 'http://schemas.openstack.org/template/'
 
         for image in self.glance.images.list(detailed=True,
-                                             filters={'status': 'active'}):
+                                             filters={'status': 'active', 'tag': ["infn-cloud"]}):
             img_id = image.get("id")
 
             aux_img = copy.deepcopy(template)
